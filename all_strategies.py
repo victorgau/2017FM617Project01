@@ -48,6 +48,29 @@ def RSI_7030_strategy(df):
     return df
 
 
+def RSI_8020_strategy(df):
+    """
+    RSI < 20: buy
+    RSI > 80: sell
+    """
+    df['RSI'] = talib.RSI(df['Close'].values)
+
+    has_position = False
+    df['signals'] = 0
+    for t in range(2, df['signals'].size):
+        if df['RSI'][t-1] < 20:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['RSI'][t-1] > 80:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
+
+
 def BBands_strategy(df):
     df['UBB'], df['MBB'], df['LBB'] = talib.BBANDS(df['Close'].values, matype=MA_Type.T3)
 
