@@ -88,3 +88,30 @@ def BBands_strategy(df):
 
     df['positions'] = df['signals'].cumsum().shift()
     return df
+
+
+
+
+def 中山南拳寶寶_strategy(df):
+    """
+    WMSR < 80時進場
+    WMSR > 20時出場
+    """
+    df['low9'] = df['Low'].rolling(window=9).min()
+    df['high9'] = df['High'].rolling(window=9).max()
+    df['WMSR'] = 100*((df['high9'] - df['Close']) / (df['high9'] - df['low9']) )
+
+    has_position = False
+    df['signals'] = 0
+    for t in range(2, df['signals'].size):
+        if df['WMSR'][t] < 80:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['WMSR'][t] > 20:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
