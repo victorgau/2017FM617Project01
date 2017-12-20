@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 import talib
@@ -88,6 +87,32 @@ def BBands_strategy(df):
 
     df['positions'] = df['signals'].cumsum().shift()
     return df
+
+
+def Team1_strategy(df):
+    close=pd.DataFrame(df["Close"])
+    short_win = 12    # 短期EMA平滑天数
+    long_win  = 26    # 長期EMA平滑天数
+    macd_win  = 20    # DEA線平滑天数
+    macd_tmp  =  talib.MACD( df['Close'].values,fastperiod = short_win ,slowperiod = long_win ,signalperiod = macd_win )
+    df['DIF'] =macd_tmp [ 0 ]
+    df['DEA'] =macd_tmp [ 1 ]
+    df['MACD']=macd_tmp [ 2 ]
+    has_position = False
+    df['signals'] = 0
+    for t in range(2, df['signals'].size):
+        if df['DIF'][t] > 0 and df['DEA'][t] >0 and df['DIF'][t] > df['DEA'][t] and df['DIF'][t-1]<df['DEA'][t-1]:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['DIF'][t] < 0 and df['DEA'][t] < 0 and df['DIF'][t] < df['DEA'][t] and df['DIF'][t-1]>df['DEA'][t-1]:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
+
 
 def Team3_strategy(df):
     """
