@@ -202,3 +202,26 @@ def JuianJuian4715_strategy(df):
 
     df['positions'] = df['signals'].cumsum().shift()
     return df
+
+def 大盜韓不住_strategy(df):
+    """
+    乖離率,乖離率代表的就是投資者的平均報酬率，當股價漲離平均成本很多的時候，
+    就可能會有大的獲利賣壓出現，讓股價往均線跌回,當股價跌出平均成本太多的時候，攤平或逢低的買盤可能會進入
+    乖離率<-3% 進場 , >3.5% 出場
+    """	
+    has_position = False
+    df['6d'] = pd.Series.rolling(df['Close'], window=6).mean()
+    df['BIAS'] = (df['Close'] - df['6d'] )/df['6d']
+    df['signals'] = 0
+    for t in range(2, df['signals'].size):
+        if df['BIAS'][t] < -0.02:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['BIAS'][t] > 0.025:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
