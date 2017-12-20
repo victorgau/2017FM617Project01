@@ -1,4 +1,3 @@
-
 import numpy as np
 import pandas as pd
 import talib
@@ -85,6 +84,37 @@ def BBands_strategy(df):
             if has_position:
                 df.loc[df.index[t], 'signals'] = -1
                 has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
+
+def JuianJuian4715_strategy(df):
+    has_position = False
+    df['signals'] = 0
+    """
+    ##strategy:以20MA為中心，上下各2個標準差為範圍的一個軌道操作方式。
+    ##買進訊號:
+    #1.價格由下向上 穿越下軌線時，是買進訊號
+    #2.價格由下向上 穿越中間線時，股價可能加速向上，是加碼買進訊號
+    #3.價格在中間線與上軌線之間波動時，為多頭市場，可作多
+    """
+    ave = pd.Series.rolling(df['Close'], window=20).mean() 
+    std = pd.Series.rolling(df['Close'], window=20).std()
+    df['ave']= pd.Series.rolling(df['Close'], window=20).mean()
+    df['upper'] = ave + 2*std
+    df['lower'] = ave -2*std
+
+    for t in range(2, df['signals'].size):
+        if df['upper'][t] > df['ave'][t-1]:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['lower'][t] < df['ave'][t-1]:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+
 
     df['positions'] = df['signals'].cumsum().shift()
     return df
