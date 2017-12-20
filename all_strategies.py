@@ -89,6 +89,32 @@ def BBands_strategy(df):
     df['positions'] = df['signals'].cumsum().shift()
     return df
 
+
+def 第一組_strategy(df):
+    close=pd.DataFrame(df["Close"])
+    short_win = 12    # 短期EMA平滑天数
+    long_win  = 26    # 長期EMA平滑天数
+    macd_win  = 20    # DEA線平滑天数
+    macd_tmp  =  talib.MACD( df['Close'].values,fastperiod = short_win ,slowperiod = long_win ,signalperiod = macd_win )
+    df['DIF'] =macd_tmp [ 0 ]
+    df['DEA'] =macd_tmp [ 1 ]
+    df['MACD']=macd_tmp [ 2 ]
+    has_position = False
+    df['signals'] = 0
+    for t in range(2, df['signals'].size):
+        if df['DIF'][t] > 0 and df['DEA'][t] >0 and df['DIF'][t] > df['DEA'][t] and df['DIF'][t-1]<df['DEA'][t-1]:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['DIF'][t] < 0 and df['DEA'][t] < 0 and df['DIF'][t] < df['DEA'][t] and df['DIF'][t-1]>df['DEA'][t-1]:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
+
+
 def Team3_strategy(df):
     """
     主要使用BBand + 5MA策略，
@@ -114,6 +140,62 @@ def Team3_strategy(df):
                 df.loc[df.index[t], 'signals'] = 1
                 has_position = True
         elif  (df['Close'][t] < df['midbbands'][t-1]):
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
+
+
+def 中山南拳寶寶_strategy(df):
+    """
+    WMSR < 80時進場
+    WMSR > 20時出場
+    """
+    df['low9'] = df['Low'].rolling(window=9).min()
+    df['high9'] = df['High'].rolling(window=9).max()
+    df['WMSR'] = 100*((df['high9'] - df['Close']) / (df['high9'] - df['low9']) )
+
+    has_position = False
+    df['signals'] = 0
+    for t in range(2, df['signals'].size):
+        if df['WMSR'][t] < 80:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['WMSR'][t] > 20:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
+
+
+def JuianJuian4715_strategy(df):
+    """
+    ##strategy:以20MA為中心，上下各2個標準差為範圍的一個軌道操作方式。
+    ##買進訊號:
+    #1.價格由下向上 穿越下軌線時，是買進訊號
+    #2.價格由下向上 穿越中間線時，股價可能加速向上，是加碼買進訊號
+    #3.價格在中間線與上軌線之間波動時，為多頭市場，可作多
+    """
+    has_position = False
+    df['signals'] = 0
+
+    ave = pd.Series.rolling(df['Close'], window=20).mean()
+    std = pd.Series.rolling(df['Close'], window=20).std()
+    df['ave']= pd.Series.rolling(df['Close'], window=20).mean()
+    df['upper'] = ave + 2*std
+    df['lower'] = ave -2*std
+
+    for t in range(2, df['signals'].size):
+        if df['upper'][t] > df['ave'][t-1]:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['lower'][t] < df['ave'][t-1]:
             if has_position:
                 df.loc[df.index[t], 'signals'] = -1
                 has_position = False
