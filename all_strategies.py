@@ -226,6 +226,7 @@ def 大盜韓不住_strategy(df):
     df['positions'] = df['signals'].cumsum().shift()
     return df
 
+
 def 財運滾滾來_strategy(df):
     """
     進場訊號:黃金交叉(20MA>60MA)、今日收盤價跌破前日BBANDS下限、乖離率(BIAS)小於-0.05[三項條件同時符合即進場]
@@ -244,6 +245,38 @@ def 財運滾滾來_strategy(df):
                 df.loc[df.index[t], 'signals'] = 1
                 has_position = True
         elif df['20MA'][t] < df['60MA'][t] and df['Close'][t] > df['UBB'][t-1] and df['BIAS'][t] > 0.1:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
+
+
+def team2_strategy(df):
+    has_position = False
+    df['signals'] = 0
+
+    """
+    原先布林逆勢策略是股價上到下突破UBB買進、下到上突破賣出
+    想透過收盤價下到上突破ubb、上到下突破UBB放慢進出場，搭配乖離率做調整
+    """
+    # 
+    # 進場訊號：1.六日乖離率 < -0.06
+    #           2.收盤價下到上突破LBB
+
+    # 賣出訊號：1.六日乖離率 > 0.06
+    #           2.價格上到下突破UBB
+    df['UBB'], df['MBB'], df['LBB'] = talib.BBANDS(df['Close'].values, matype=MA_Type.T3)
+    df['MA6'] = pd.Series.rolling(df['Close'], window=6).mean()
+    df['BIAS6']= (df['Close']-df['MA6'])/df['MA6']
+
+    for t in range(2, df['signals'].size):
+        if df['BIAS6'][t] < -0.06 or ( df['Close'][t] > df['LBB'][t] and df['Close'][t-1] < df['LBB'][t-1]) :
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['BIAS6'][t] > 0.06 or ( df['Close'][t-1] > df['UBB'][t-1] and df['Close'][t] > df['UBB'][t] ):
             if has_position:
                 df.loc[df.index[t], 'signals'] = -1
                 has_position = False
