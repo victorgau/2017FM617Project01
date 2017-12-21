@@ -208,7 +208,7 @@ def 大盜韓不住_strategy(df):
     乖離率,乖離率代表的就是投資者的平均報酬率，當股價漲離平均成本很多的時候，
     就可能會有大的獲利賣壓出現，讓股價往均線跌回,當股價跌出平均成本太多的時候，攤平或逢低的買盤可能會進入
     乖離率<-3% 進場 , >3.5% 出場
-    """	
+    """
     has_position = False
     df['6d'] = pd.Series.rolling(df['Close'], window=6).mean()
     df['BIAS'] = (df['Close'] - df['6d'] )/df['6d']
@@ -219,6 +219,31 @@ def 大盜韓不住_strategy(df):
                 df.loc[df.index[t], 'signals'] = 1
                 has_position = True
         elif df['BIAS'][t] > 0.025:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
+
+def 財運滾滾來_strategy(df):
+    """
+    進場訊號:黃金交叉(20MA>60MA)、今日收盤價跌破前日BBANDS下限、乖離率(BIAS)小於-0.05[三項條件同時符合即進場]
+    出場訊號:死亡交叉(20MA<60MA)、今日收盤價漲破前日BBANDS上限、乖離率(BIAS)大於 0.1[三項條件同時符合即出場]
+    """
+    df['20MA'] = pd.Series.rolling(df['Close'], window=20).mean()
+    df['60MA'] = pd.Series.rolling(df['Close'], window=60).mean()
+    df['UBB'], df['MBB'], df['LBB'] = talib.BBANDS(df['Close'].values, matype=MA_Type.T3)
+    df['BIAS']= (df['Close']-df['20MA'])/df['20MA']
+
+    has_position = False
+    df['signals'] = 0
+    for t in range(2, df['signals'].size):
+        if df['20MA'][t] > df['60MA'][t] and df['Close'][t] < df['LBB'][t-1] and df['BIAS'][t] < -0.05:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['20MA'][t] < df['60MA'][t] and df['Close'][t] > df['UBB'][t-1] and df['BIAS'][t] > 0.1:
             if has_position:
                 df.loc[df.index[t], 'signals'] = -1
                 has_position = False
