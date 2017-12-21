@@ -64,6 +64,8 @@ def main():
     results_df = pd.DataFrame(results, columns=['sharpe','MaxDrawDown','MaxDrawDownDuration','returns',
                                                 'days', 'entries','symbol','strategy'])
 
+    print("\n" * 2)
+
     print("使用 Maximum Drawdown 排序")
     print("=" * 40)
     print(results_df.sort_values('MaxDrawDown',ascending=False).head())
@@ -73,6 +75,11 @@ def main():
     print("使用 returns 排序")
     print("=" * 40)
     print(results_df.sort_values('returns',ascending=False).head())
+
+    results_df.sort_values('MaxDrawDown',ascending=False).to_html("docs/MaxDrawDown.html")
+    results_df.sort_values('returns',ascending=False).to_html("docs/Returns.html")
+    results_df.sort_values('sharpe',ascending=False).to_html("docs/Sharpe.html")
+    results_df.sort_values('MaxDrawDownDuration',ascending=True).to_html("docs/MaximumDrawDownDuration.html")
 
 if __name__=="__main__":
     main()
