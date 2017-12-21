@@ -285,7 +285,7 @@ def team2_strategy(df):
     return df
 
 
-def ╭£₲❤₵£╮(df):
+def LG_minus3_CL(df):
     """
     KDJ 策略
     進場訊號: 當K>D 值 且J值小於10時進場
