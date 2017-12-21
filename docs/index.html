@@ -1,16 +1,34 @@
-<html>
+<!doctype html>
+<html lang="en">
 <head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>回測結果</title>
-  <meta charset="UTF-8">
+  <link rel="stylesheet" href="https://code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="/resources/demos/style.css">
+  <script src="https://code.jquery.com/jquery-1.12.4.js"></script>
+  <script src="https://code.jquery.com/ui/1.12.1/jquery-ui.js"></script>
+  <script>
+  $( function() {
+    $("#tabs").tabs();
+    $("#Sharpe").load("Sharpe.html");
+    $("#Returns").load("Returns.html");
+    $("#MaxDrawDown").load("MaxDrawDown.html");
+    $("#MaxDrawDownDuration").load("MaximumDrawDownDuration.html");
+  } );
+  </script>
 </head>
 <body>
-<h1>2017FM617 Project01 回測結果</h1>
-
-<ul>
-  <li><a href="Sharpe.html">Sharpe.html</a></li>
-  <li><a href="Returns.html">Returns.html</a></li>
-  <li><a href="MaxDrawDown.html">MaxDrawDown.html</a></li>
-  <li><a href="MaximumDrawDownDuration.html">MaxDrawDownDuration.html</a></li>
-</ul>
-</body>
-</html>
+<h1>2017 FM617 Project 01 回測結果</h1>
+<div id="tabs">
+  <ul>
+    <li><a href="#Sharpe">Sharpe</a></li>
+    <li><a href="#Returns">Returns</a></li>
+    <li><a href="#MaxDrawDown">MaxDrawDown</a></li>
+    <li><a href="#MaxDrawDownDuration">MaxDrawDownDuration</a></li>
+  </ul>
+  <div id="Sharpe"></div>
+  <div id="Returns"></div>
+  <div id="MaxDrawDown"></div>
+  <div id="MaxDrawDownDuration"></div>
+</div>

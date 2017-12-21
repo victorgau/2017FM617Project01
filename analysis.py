@@ -35,6 +35,13 @@ def apply_strategy(strategy, df):
     return strategy(df)
 
 
+def utf8conversion(filename):
+    with open(filename) as fread:
+        data = fread.read()
+    with open(filename, 'w', encoding="utf-8") as fwrite:
+        fwrite.write(data)
+
+
 def main():
 
     # 讀出預先下載好的股價資料
@@ -80,6 +87,11 @@ def main():
     results_df.sort_values('returns',ascending=False).to_html("docs/Returns.html")
     results_df.sort_values('sharpe',ascending=False).to_html("docs/Sharpe.html")
     results_df.sort_values('MaxDrawDownDuration',ascending=True).to_html("docs/MaximumDrawDownDuration.html")
+
+    utf8conversion('docs/MaxDrawDown.html')
+    utf8conversion('docs/Returns.html')
+    utf8conversion('docs/Sharpe.html')
+    utf8conversion('docs/MaximumDrawDownDuration.html')
 
 if __name__=="__main__":
     main()
