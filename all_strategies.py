@@ -283,3 +283,32 @@ def team2_strategy(df):
 
     df['positions'] = df['signals'].cumsum().shift()
     return df
+
+
+def LG_minus3_CL(df):
+    """
+    KDJ 策略
+    進場訊號: 當K>D 值 且J值小於10時進場
+    出場訊號: 當K<D 值 且J值大於90時出場
+    
+    KDJ策略為 J<0 進場 J>100出場，但此設定回測結果大部分股票皆無交易訊號，故設定區間為(10,90)
+        
+    """
+    df['Talib_K_index']=talib.STOCH(df["High"].values,df['Low'].values,df['Close'].values )[0]
+    df['Talib_D_index']=talib.STOCH(df["High"].values,df['Low'].values,df['Close'].values )[1]
+    df['Talib_J_index']=3*df['Talib_K_index']-2*df['Talib_D_index']
+    has_position = False
+    df['signals'] = 0
+    for t in range(2,df['signals'].size):
+        if df['Talib_K_index'][t] > df["Talib_D_index"][t] and df['Talib_J_index'][t]<10 :
+            if not has_position:
+                df.loc[df.index[t] ,"signals"]=1
+                has_position =True
+        elif df['Talib_K_index'][t] <df['Talib_D_index'][t] and df['Talib_J_index'][t]>90:
+            if has_position:
+                df.loc[df.index[t],'signals']= -1
+                has_position = False
+
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
