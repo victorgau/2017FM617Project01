@@ -312,3 +312,29 @@ def LG_minus3_CL(df):
 
     df['positions'] = df['signals'].cumsum().shift()
     return df
+
+def Best_strategy(df):
+    """
+     MACD：對長期與短期的移動平均線 收斂或發散的徵兆，加以雙重平滑處理，用來判斷買賣股票的時機與訊號(確定波段漲幅 找到買賣點)
+     MACD策略：快線 (DIF) 向上突破 慢線 (MACD)。 → 買進訊號 
+               快線 (DIF) 向下跌破 慢線 (MACD)。→ 賣出訊號
+    """
+    df['EMAfast'] = pd.Series.ewm(df['Close'], span = 12).mean()
+    df['EMAslow'] = pd.Series.ewm(df['Close'], span = 26).mean()
+    df['DIF'] = (df['EMAfast'] - df['EMAslow'])
+    df['MACD'] = pd.Series.ewm(df['DIF'], span = 9).mean()
+    
+    has_position = False
+    df['signals'] = 0
+    for t in range(2, df['signals'].size):
+        if df['DIF'][t-1]<df['MACD'][t] and df['DIF'][t]>df['MACD'][t]:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1
+                has_position = True
+        elif df['DIF'][t-1]>df['MACD'][t] and df['DIF'][t]<df['MACD'][t]:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1
+                has_position = False
+    
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
