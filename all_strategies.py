@@ -261,7 +261,7 @@ def team2_strategy(df):
     原先布林逆勢策略是股價上到下突破UBB買進、下到上突破賣出
     想透過收盤價下到上突破ubb、上到下突破UBB放慢進出場，搭配乖離率做調整
     """
-    # 
+    #
     # 進場訊號：1.六日乖離率 < -0.06
     #           2.收盤價下到上突破LBB
 
@@ -290,9 +290,9 @@ def LG_minus3_CL(df):
     KDJ 策略
     進場訊號: 當K>D 值 且J值小於10時進場
     出場訊號: 當K<D 值 且J值大於90時出場
-    
+
     KDJ策略為 J<0 進場 J>100出場，但此設定回測結果大部分股票皆無交易訊號，故設定區間為(10,90)
-        
+
     """
     df['Talib_K_index']=talib.STOCH(df["High"].values,df['Low'].values,df['Close'].values )[0]
     df['Talib_D_index']=talib.STOCH(df["High"].values,df['Low'].values,df['Close'].values )[1]
@@ -316,14 +316,14 @@ def LG_minus3_CL(df):
 def Best_strategy(df):
     """
      MACD：對長期與短期的移動平均線 收斂或發散的徵兆，加以雙重平滑處理，用來判斷買賣股票的時機與訊號(確定波段漲幅 找到買賣點)
-     MACD策略：快線 (DIF) 向上突破 慢線 (MACD)。 → 買進訊號 
+     MACD策略：快線 (DIF) 向上突破 慢線 (MACD)。 → 買進訊號
                快線 (DIF) 向下跌破 慢線 (MACD)。→ 賣出訊號
     """
     df['EMAfast'] = pd.Series.ewm(df['Close'], span = 12).mean()
     df['EMAslow'] = pd.Series.ewm(df['Close'], span = 26).mean()
     df['DIF'] = (df['EMAfast'] - df['EMAslow'])
     df['MACD'] = pd.Series.ewm(df['DIF'], span = 9).mean()
-    
+
     has_position = False
     df['signals'] = 0
     for t in range(2, df['signals'].size):
@@ -335,6 +335,34 @@ def Best_strategy(df):
             if has_position:
                 df.loc[df.index[t], 'signals'] = -1
                 has_position = False
+
+    df['positions'] = df['signals'].cumsum().shift()
+    return df
+
+def 第六組_strategy(df):
+    df['MA20'] = np.round(pd.Series.rolling(df['Close'], window=20).max(), 2)
+    df['MA60'] = np.round(pd.Series.rolling(df['Close'], window=60).min(), 2)
+
+    has_position = False
+    df['signals'] = 0
+
+    """
+    # 當短周期均線(MA20)由下方突破長周期均線(MA60),即為[黃金交叉],買進
+    # 反之;當短周期均線(MA20)由下方跌破長周期均線(MA60),即為[死亡交叉],賣出
+    """
     
+    for t in range(3, df['signals'].size):
+        if df['MA20'][t-2] < df['MA60'][t-2] and df['MA20'][t-1] > df['MA60'][t-1]:
+            if not has_position:
+                df.loc[df.index[t], 'signals'] = 1  #買進的訊號
+                has_position = True
+        elif df['MA20'][t-2] > df['MA60'][t-2] and df['MA20'][t-1] < df['MA60'][t-1]:
+            if has_position:
+                df.loc[df.index[t], 'signals'] = -1 #賣出的訊號
+                has_position = False
+
+
+
+
     df['positions'] = df['signals'].cumsum().shift()
     return df
